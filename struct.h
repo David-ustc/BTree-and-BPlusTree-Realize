@@ -1,21 +1,26 @@
 #pragma once
 // the degree of btree
-#define M 2 
+#define M 2
+#define valuetype string
+#include <vector>
+#include <string>
+using namespace std;
 
 typedef struct btree_nodes {
 	int k[2*M-1];
+
 	struct btree_nodes *p[2*M];
 	int num;
 	bool is_leaf;
-	struct btree_nodes *prev;  // use one struct just for simple,这2个，供B+Tree used
-	struct btree_nodes *next;  // 供B+Tree used
+	struct btree_nodes *prev;  // 渚汢+Tree
+	struct btree_nodes *next;  // 渚汢+Tree
 	
 } btree_node;
 
 
 typedef struct StorageNode{
 	btree_node bnode;
-	int index[M];   // 索引集合:index_set 
+	int index[M];   // 绱㈠紩闆嗗悎:index_set 
 }storage_node;
 
 typedef struct StorageStruct{

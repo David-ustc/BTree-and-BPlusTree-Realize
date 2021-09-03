@@ -93,7 +93,7 @@ int BPlusTree::btree_split_child(btree_node *parent, int pos, btree_node *child)
 	return 1;
 }
 
-void BPlusTree::btree_insert_nonfull(btree_node *node, int target)
+void BPlusTree::btree_insert_nonfull(btree_node *node, int target, valuetype value)
 {
     if(true == node->is_leaf) {
         int pos = node->num;
@@ -119,11 +119,11 @@ void BPlusTree::btree_insert_nonfull(btree_node *node, int target)
             }
         }
         
-        btree_insert_nonfull(node->p[pos], target);
+        btree_insert_nonfull(node->p[pos], target, value);
     }
 }
 
-btree_node* BPlusTree::btree_insert(btree_node *root, int target)
+btree_node* BPlusTree::btree_insert(btree_node *root, int target, valuetype value)
 {
     if(NULL == root) {
         return NULL;
@@ -138,10 +138,10 @@ btree_node* BPlusTree::btree_insert(btree_node *root, int target)
         node->is_leaf = false;
         node->p[0] = root;
         btree_split_child(node, 0, root);
-        btree_insert_nonfull(node, target);
+        btree_insert_nonfull(node, target, value);
         return node;
     } else {
-        btree_insert_nonfull(root, target);    
+        btree_insert_nonfull(root, target, value);    
         return root;
     }
 }
@@ -391,12 +391,12 @@ void BPlusTree::linear_print()
 
 BPlusTree::BPlusTree(void)
 {
-	// ÏÈÅĞ¶ÏÎÄ¼şÊÇ·ñ´æÔÚ
- 	// windowsÏÂ£¬ÊÇio.hÎÄ¼ş£¬linuxÏÂÊÇ unistd.hÎÄ¼ş 
+	// å…ˆåˆ¤æ–­æ–‡ä»¶æ˜¯å¦å­˜åœ¨
+ 	// windowsä¸‹ï¼Œæ˜¯io.hæ–‡ä»¶ï¼Œlinuxä¸‹æ˜¯ unistd.hæ–‡ä»¶ 
   	// int access(const char *pathname, int mode);
    	if(-1==access("define.Bdb",F_OK))
     {
-	   	// ²»´æÔÚ ,´´½¨ 
+	   	// ä¸å­˜åœ¨ ,åˆ›å»º 
 //	   	pfile = fopen("bplus.bp","w");
    		roots = btree_create();
 	}

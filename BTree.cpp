@@ -26,8 +26,9 @@ btree_node* BTree::btree_node_new()
 		node->p[i] = NULL;
 	}
 
+	//node->keys.push_back("qwertyu");
 	node->num = 0;
-	node->is_leaf = true;     //Ä¬ÈÏÎªÒ¶×Ó 
+	node->is_leaf = true;     //é»˜è®¤ä¸ºå¶å­ 
 
 	return node;
 }
@@ -47,16 +48,16 @@ int BTree::btree_split_child(btree_node *parent, int pos, btree_node *child)
 	if(NULL == new_child) {
 		return -1;
 	}
-	// ĞÂ½ÚµãµÄis_leafÓëchildÏàÍ¬£¬keyµÄ¸öÊıÎªM-1
+	// æ–°èŠ‚ç‚¹çš„is_leafä¸childç›¸åŒï¼Œkeyçš„ä¸ªæ•°ä¸ºM-1
 	new_child->is_leaf = child->is_leaf;
 	new_child->num = M - 1;
 
-	// ½«childºó°ë²¿·ÖµÄkey¿½±´¸øĞÂ½Úµã
+	// å°†childååŠéƒ¨åˆ†çš„keyæ‹·è´ç»™æ–°èŠ‚ç‚¹
 	for(int i = 0; i < M - 1; i++) {
 		new_child->k[i] = child->k[i+M];
 	}
 
-	// Èç¹ûchild²»ÊÇÒ¶×Ó£¬»¹ĞèÒª°ÑÖ¸Õë¿½¹ıÈ¥£¬Ö¸Õë±È½Úµã¶à1
+	// å¦‚æœchildä¸æ˜¯å¶å­ï¼Œè¿˜éœ€è¦æŠŠæŒ‡é’ˆæ‹·è¿‡å»ï¼ŒæŒ‡é’ˆæ¯”èŠ‚ç‚¹å¤š1
 	if(false == new_child->is_leaf) {
 		for(int i = 0; i < M; i++) {
 			new_child->p[i] = child->p[i+M];
@@ -65,7 +66,7 @@ int BTree::btree_split_child(btree_node *parent, int pos, btree_node *child)
 
 	child->num = M - 1;
 
-	// childµÄÖĞ¼ä½ÚµãĞèÒª²åÈëparentµÄpos´¦£¬¸üĞÂparentµÄkeyºÍpointer
+	// childçš„ä¸­é—´èŠ‚ç‚¹éœ€è¦æ’å…¥parentçš„poså¤„ï¼Œæ›´æ–°parentçš„keyå’Œpointer
 	for(int i = parent->num; i > pos; i--) {
 		parent->p[i+1] = parent->p[i];
 	}
@@ -80,11 +81,11 @@ int BTree::btree_split_child(btree_node *parent, int pos, btree_node *child)
 	return 0;
 }
 
-// Ö´ĞĞ¸Ã²Ù×÷Ê±£¬node->num < 2M-1 
-void BTree::btree_insert_nonfull(btree_node *node, int target)
+// æ‰§è¡Œè¯¥æ“ä½œæ—¶ï¼Œnode->num < 2M-1 
+void BTree::btree_insert_nonfull(btree_node *node, int target, valuetype value)
 {
 	if(1 == node->is_leaf) {
-		// Èç¹ûÔÚÒ¶×ÓÖĞÕÒµ½£¬Ö±½ÓÉ¾³ı
+		// å¦‚æœåœ¨å¶å­ä¸­æ‰¾åˆ°ï¼Œç›´æ¥åˆ é™¤
 		int pos = node->num;
 		while(pos >= 1 && target < node->k[pos-1]) {
 			node->k[pos] = node->k[pos-1];
@@ -92,37 +93,38 @@ void BTree::btree_insert_nonfull(btree_node *node, int target)
 		}
 
 		node->k[pos] = target;
+
 		node->num += 1;
 		btree_node_num+=1;
 		
 	} else {
-		// ÑØ×Å²éÕÒÂ·¾¶ÏÂ½µ
+		// æ²¿ç€æŸ¥æ‰¾è·¯å¾„ä¸‹é™
 		int pos = node->num;
 		while(pos > 0 && target < node->k[pos-1]) {
 			pos--;
 		}
 
 		if(2 * M -1 == node->p[pos]->num) {
-			// Èç¹ûÂ·¾¶ÉÏÓĞÂú½ÚµãÔò·ÖÁÑ
+			// å¦‚æœè·¯å¾„ä¸Šæœ‰æ»¡èŠ‚ç‚¹åˆ™åˆ†è£‚
 			btree_split_child(node, pos, node->p[pos]);
 			if(target > node->k[pos]) {
 				pos++;
 			}
 		}
 
-		btree_insert_nonfull(node->p[pos], target);
+		btree_insert_nonfull(node->p[pos], target, value);
 	}
 }
 
-//²åÈëÈë¿Ú
-btree_node* BTree::btree_insert(btree_node *root, int target)
+//æ’å…¥å…¥å£
+btree_node* BTree::btree_insert(btree_node *root, int target, valuetype value)
 {
 	if(NULL == root) {
 		return NULL;
 	}
 
-	// ¶Ô¸ù½ÚµãµÄÌØÊâ´¦Àí£¬Èç¹û¸ùÊÇÂúµÄ£¬Î¨Ò»Ê¹µÃÊ÷Ôö¸ßµÄÇéĞÎ
-	// ÏÈÉêÇëÒ»¸öĞÂµÄ
+	// å¯¹æ ¹èŠ‚ç‚¹çš„ç‰¹æ®Šå¤„ç†ï¼Œå¦‚æœæ ¹æ˜¯æ»¡çš„ï¼Œå”¯ä¸€ä½¿å¾—æ ‘å¢é«˜çš„æƒ…å½¢
+	// å…ˆç”³è¯·ä¸€ä¸ªæ–°çš„
 	if(2 * M - 1 == root->num) {
 		btree_node* node = btree_node_new();
 		if(NULL == node) {
@@ -132,32 +134,32 @@ btree_node* BTree::btree_insert(btree_node *root, int target)
 		node->is_leaf = 0;
 		node->p[0] = root;
 		btree_split_child(node, 0, root);
-		btree_insert_nonfull(node, target);
+		btree_insert_nonfull(node, target, value);
 		return node;
 	} else {
-		btree_insert_nonfull(root, target);    
+		btree_insert_nonfull(root, target, value);    
 		return root;
 	}
 }
 
-// ½«y£¬root->k[pos], zºÏ²¢µ½y½Úµã£¬²¢ÊÍ·Åz½Úµã£¬y,z¸÷ÓĞM-1¸ö½Úµã
+// å°†yï¼Œroot->k[pos], zåˆå¹¶åˆ°yèŠ‚ç‚¹ï¼Œå¹¶é‡Šæ”¾zèŠ‚ç‚¹ï¼Œy,zå„æœ‰M-1ä¸ªèŠ‚ç‚¹
 void BTree::btree_merge_child(btree_node *root, int pos, btree_node *y, btree_node *z)
 {
-	// ½«zÖĞ½Úµã¿½±´µ½yµÄºó°ë²¿·Ö
+	// å°†zä¸­èŠ‚ç‚¹æ‹·è´åˆ°yçš„ååŠéƒ¨åˆ†
 	y->num = 2 * M - 1;
 	for(int i = M; i < 2 * M - 1; i++) {
 		y->k[i] = z->k[i-M];
 	}
-	y->k[M-1] = root->k[pos];// k[pos]ÏÂ½µÎªyµÄÖĞ¼ä½Úµã
+	y->k[M-1] = root->k[pos];// k[pos]ä¸‹é™ä¸ºyçš„ä¸­é—´èŠ‚ç‚¹
 
-	// Èç¹ûz·ÇÒ¶×Ó£¬ĞèÒª¿½±´pointer
+	// å¦‚æœzéå¶å­ï¼Œéœ€è¦æ‹·è´pointer
 	if(false == z->is_leaf) {
 		for(int i = M; i < 2 * M; i++) {
 			y->p[i] = z->p[i-M];
 		}
 	}
 
-	// k[pos]ÏÂ½µµ½yÖĞ£¬¸üĞÂkeyºÍpointer
+	// k[pos]ä¸‹é™åˆ°yä¸­ï¼Œæ›´æ–°keyå’Œpointer
 	for(int j = pos + 1; j < root->num; j++) {
 		root->k[j-1] = root->k[j];
 		root->p[j] = root->p[j+1];
@@ -167,26 +169,26 @@ void BTree::btree_merge_child(btree_node *root, int pos, btree_node *y, btree_no
 	free(z);
 }
 
-/************  É¾³ı·ÖÎö   **************
+/************  åˆ é™¤åˆ†æ   **************
 *
-ÔÚÉ¾³ıBÊ÷½ÚµãÊ±£¬ÎªÁË±ÜÃâ»ØËİ£¬µ±Óöµ½ĞèÒªºÏ²¢µÄ½ÚµãÊ±¾ÍÁ¢¼´Ö´ĞĞºÏ²¢£¬BÊ÷µÄÉ¾³ıËã·¨ÈçÏÂ£º´ÓrootÏòÒ¶×Ó½Úµã°´ÕÕsearch¹æÂÉ±éÀú£º
-£¨1£©  Èç¹ûtargetÔÚÒ¶½ÚµãxÖĞ£¬ÔòÖ±½Ó´ÓxÖĞÉ¾³ıtarget£¬Çé¿ö£¨2£©ºÍ£¨3£©»á±£Ö¤µ±ÔÙÒ¶×Ó½ÚµãÕÒµ½targetÊ±£¬¿Ï¶¨ÄÜ½è½Úµã»òºÏ²¢³É¹¦¶ø²»»áÒıÆğ¸¸½ÚµãµÄ¹Ø¼ü×Ö¸öÊıÉÙÓÚt-1¡£
-£¨2£©  Èç¹ûtargetÔÚ·ÖÖ§½ÚµãxÖĞ£º
-£¨a£©  Èç¹ûxµÄ×ó·ÖÖ§½ÚµãyÖÁÉÙ°üº¬t¸ö¹Ø¼ü×Ö£¬ÔòÕÒ³öyµÄ×îÓÒµÄ¹Ø¼ü×Öprev£¬²¢Ìæ»»target£¬²¢ÔÚyÖĞµİ¹éÉ¾³ıprev¡£
-£¨b£©  Èç¹ûxµÄÓÒ·ÖÖ§½ÚµãzÖÁÉÙ°üº¬t¸ö¹Ø¼ü×Ö£¬ÔòÕÒ³özµÄ×î×óµÄ¹Ø¼ü×Önext£¬²¢Ìæ»»target£¬²¢ÔÚzÖĞµİ¹éÉ¾³ınext¡£
-£¨c£©  ·ñÔò£¬Èç¹ûyºÍz¶¼Ö»ÓĞt-1¸ö¹Ø¼ü×Ö£¬Ôò½«targeÓëzºÏ²¢µ½yÖĞ£¬Ê¹µÃyÓĞ2t-1¸ö¹Ø¼ü×Ö£¬ÔÙ´ÓyÖĞµİ¹éÉ¾³ıtarget¡£
-£¨3£©  Èç¹û¹Ø¼ü×Ö²»ÔÚ·ÖÖ§½ÚµãxÖĞ£¬Ôò±ØÈ»ÔÚxµÄÄ³¸ö·ÖÖ§½Úµãp[i]ÖĞ£¬Èç¹ûp[i]½ÚµãÖ»ÓĞt-1¸ö¹Ø¼ü×Ö¡£
-£¨a£©  Èç¹ûp[i-1]ÓµÓĞÖÁÉÙt¸ö¹Ø¼ü×Ö£¬Ôò½«xµÄÄ³¸ö¹Ø¼ü×Ö½µÖÁp[i]ÖĞ£¬½«p[i-1]µÄ×î´ó½ÚµãÉÏÉıÖÁxÖĞ¡£
-£¨b£©  Èç¹ûp[i+1]ÓµÓĞÖÁÉÙt¸ö¹Ø¼ü×Ö£¬Ôò½«x¸öÄ³¸ö¹Ø¼ü×Ö½µÖÁp[i]ÖĞ£¬½«p[i+1]µÄ×îĞ¡¹Ø¼ü×ÖÉÏÉıÖÁx¸ö¡£
-£¨c£©  Èç¹ûp[i-1]Óëp[i+1]¶¼ÓµÓĞt-1¸ö¹Ø¼ü×Ö£¬Ôò½«p[i]ÓëÆäÖĞÒ»¸öĞÖµÜºÏ²¢£¬½«xµÄÒ»¸ö¹Ø¼ü×Ö½µÖÁºÏ²¢µÄ½ÚµãÖĞ£¬³ÉÎªÖĞ¼ä¹Ø¼ü×Ö¡£
+åœ¨åˆ é™¤Bæ ‘èŠ‚ç‚¹æ—¶ï¼Œä¸ºäº†é¿å…å›æº¯ï¼Œå½“é‡åˆ°éœ€è¦åˆå¹¶çš„èŠ‚ç‚¹æ—¶å°±ç«‹å³æ‰§è¡Œåˆå¹¶ï¼ŒBæ ‘çš„åˆ é™¤ç®—æ³•å¦‚ä¸‹ï¼šä»rootå‘å¶å­èŠ‚ç‚¹æŒ‰ç…§searchè§„å¾‹éå†ï¼š
+ï¼ˆ1ï¼‰  å¦‚æœtargetåœ¨å¶èŠ‚ç‚¹xä¸­ï¼Œåˆ™ç›´æ¥ä»xä¸­åˆ é™¤targetï¼Œæƒ…å†µï¼ˆ2ï¼‰å’Œï¼ˆ3ï¼‰ä¼šä¿è¯å½“å†å¶å­èŠ‚ç‚¹æ‰¾åˆ°targetæ—¶ï¼Œè‚¯å®šèƒ½å€ŸèŠ‚ç‚¹æˆ–åˆå¹¶æˆåŠŸè€Œä¸ä¼šå¼•èµ·çˆ¶èŠ‚ç‚¹çš„å…³é”®å­—ä¸ªæ•°å°‘äºt-1ã€‚
+ï¼ˆ2ï¼‰  å¦‚æœtargetåœ¨åˆ†æ”¯èŠ‚ç‚¹xä¸­ï¼š
+ï¼ˆaï¼‰  å¦‚æœxçš„å·¦åˆ†æ”¯èŠ‚ç‚¹yè‡³å°‘åŒ…å«tä¸ªå…³é”®å­—ï¼Œåˆ™æ‰¾å‡ºyçš„æœ€å³çš„å…³é”®å­—prevï¼Œå¹¶æ›¿æ¢targetï¼Œå¹¶åœ¨yä¸­é€’å½’åˆ é™¤prevã€‚
+ï¼ˆbï¼‰  å¦‚æœxçš„å³åˆ†æ”¯èŠ‚ç‚¹zè‡³å°‘åŒ…å«tä¸ªå…³é”®å­—ï¼Œåˆ™æ‰¾å‡ºzçš„æœ€å·¦çš„å…³é”®å­—nextï¼Œå¹¶æ›¿æ¢targetï¼Œå¹¶åœ¨zä¸­é€’å½’åˆ é™¤nextã€‚
+ï¼ˆcï¼‰  å¦åˆ™ï¼Œå¦‚æœyå’Œzéƒ½åªæœ‰t-1ä¸ªå…³é”®å­—ï¼Œåˆ™å°†targeä¸zåˆå¹¶åˆ°yä¸­ï¼Œä½¿å¾—yæœ‰2t-1ä¸ªå…³é”®å­—ï¼Œå†ä»yä¸­é€’å½’åˆ é™¤targetã€‚
+ï¼ˆ3ï¼‰  å¦‚æœå…³é”®å­—ä¸åœ¨åˆ†æ”¯èŠ‚ç‚¹xä¸­ï¼Œåˆ™å¿…ç„¶åœ¨xçš„æŸä¸ªåˆ†æ”¯èŠ‚ç‚¹p[i]ä¸­ï¼Œå¦‚æœp[i]èŠ‚ç‚¹åªæœ‰t-1ä¸ªå…³é”®å­—ã€‚
+ï¼ˆaï¼‰  å¦‚æœp[i-1]æ‹¥æœ‰è‡³å°‘tä¸ªå…³é”®å­—ï¼Œåˆ™å°†xçš„æŸä¸ªå…³é”®å­—é™è‡³p[i]ä¸­ï¼Œå°†p[i-1]çš„æœ€å¤§èŠ‚ç‚¹ä¸Šå‡è‡³xä¸­ã€‚
+ï¼ˆbï¼‰  å¦‚æœp[i+1]æ‹¥æœ‰è‡³å°‘tä¸ªå…³é”®å­—ï¼Œåˆ™å°†xä¸ªæŸä¸ªå…³é”®å­—é™è‡³p[i]ä¸­ï¼Œå°†p[i+1]çš„æœ€å°å…³é”®å­—ä¸Šå‡è‡³xä¸ªã€‚
+ï¼ˆcï¼‰  å¦‚æœp[i-1]ä¸p[i+1]éƒ½æ‹¥æœ‰t-1ä¸ªå…³é”®å­—ï¼Œåˆ™å°†p[i]ä¸å…¶ä¸­ä¸€ä¸ªå…„å¼Ÿåˆå¹¶ï¼Œå°†xçš„ä¸€ä¸ªå…³é”®å­—é™è‡³åˆå¹¶çš„èŠ‚ç‚¹ä¸­ï¼Œæˆä¸ºä¸­é—´å…³é”®å­—ã€‚
 * 
 */
 
-// É¾³ıÈë¿Ú
+// åˆ é™¤å…¥å£
 btree_node* BTree::btree_delete(btree_node* root, int target)
 {
-	// ÌØÊâ´¦Àí£¬µ±¸ùÖ»ÓĞÁ½¸ö×ÓÅ®£¬ÇĞÁ½¸ö×ÓÅ®µÄ¹Ø¼ü×Ö¸öÊı¶¼ÎªM-1Ê±£¬ºÏ²¢¸ùÓëÁ½¸ö×ÓÅ®
-	// ÕâÊÇÎ¨Ò»ÄÜ½µµÍÊ÷¸ßµÄÇéĞÎ
+	// ç‰¹æ®Šå¤„ç†ï¼Œå½“æ ¹åªæœ‰ä¸¤ä¸ªå­å¥³ï¼Œåˆ‡ä¸¤ä¸ªå­å¥³çš„å…³é”®å­—ä¸ªæ•°éƒ½ä¸ºM-1æ—¶ï¼Œåˆå¹¶æ ¹ä¸ä¸¤ä¸ªå­å¥³
+	// è¿™æ˜¯å”¯ä¸€èƒ½é™ä½æ ‘é«˜çš„æƒ…å½¢
 	if(1 == root->num) {
 		btree_node *y = root->p[0];
 		btree_node *z = root->p[1];
@@ -206,11 +208,11 @@ btree_node* BTree::btree_delete(btree_node* root, int target)
 	}
 }
 
-// rootÖÁÉÙÓĞ¸öt¸ö¹Ø¼ü×Ö£¬±£Ö¤²»»á»ØËİ
+// rootè‡³å°‘æœ‰ä¸ªtä¸ªå…³é”®å­—ï¼Œä¿è¯ä¸ä¼šå›æº¯
 void BTree::btree_delete_nonone(btree_node *root, int target)
 {
 	if(true == root->is_leaf) {
-		// Èç¹ûÔÚÒ¶×Ó½Úµã£¬Ö±½ÓÉ¾³ı
+		// å¦‚æœåœ¨å¶å­èŠ‚ç‚¹ï¼Œç›´æ¥åˆ é™¤
 		int i = 0;
 		while(i < root->num && target > root->k[i]) i++;
 		if(target == root->k[i]) {
@@ -229,28 +231,28 @@ void BTree::btree_delete_nonone(btree_node *root, int target)
 		btree_node *y = NULL, *z = NULL;
 		while(i < root->num && target > root->k[i]) i++;
 		if(i < root->num && target == root->k[i]) {
-			// Èç¹ûÔÚ·ÖÖ§½ÚµãÕÒµ½target
+			// å¦‚æœåœ¨åˆ†æ”¯èŠ‚ç‚¹æ‰¾åˆ°target
 			y = root->p[i];
 			z = root->p[i+1];
 			if(y->num > M - 1) {
-				// Èç¹û×ó·ÖÖ§¹Ø¼ü×Ö¶àÓÚM-1£¬ÔòÕÒµ½×ó·ÖÖ§µÄ×îÓÒ½Úµãprev£¬Ìæ»»target
-				// ²¢ÔÚ×ó·ÖÖ§ÖĞµİ¹éÉ¾³ıprev,Çé¿ö2£¨a)
+				// å¦‚æœå·¦åˆ†æ”¯å…³é”®å­—å¤šäºM-1ï¼Œåˆ™æ‰¾åˆ°å·¦åˆ†æ”¯çš„æœ€å³èŠ‚ç‚¹prevï¼Œæ›¿æ¢target
+				// å¹¶åœ¨å·¦åˆ†æ”¯ä¸­é€’å½’åˆ é™¤prev,æƒ…å†µ2ï¼ˆa)
 				int pre = btree_search_predecessor(y);
 				root->k[i] = pre;
 				btree_delete_nonone(y, pre);
 			} else if(z->num > M - 1) {
-				// Èç¹ûÓÒ·ÖÖ§¹Ø¼ü×Ö¶àÓÚM-1£¬ÔòÕÒµ½ÓÒ·ÖÖ§µÄ×î×ó½Úµãnext£¬Ìæ»»target
-				// ²¢ÔÚÓÒ·ÖÖ§ÖĞµİ¹éÉ¾³ınext,Çé¿ö2(b)
+				// å¦‚æœå³åˆ†æ”¯å…³é”®å­—å¤šäºM-1ï¼Œåˆ™æ‰¾åˆ°å³åˆ†æ”¯çš„æœ€å·¦èŠ‚ç‚¹nextï¼Œæ›¿æ¢target
+				// å¹¶åœ¨å³åˆ†æ”¯ä¸­é€’å½’åˆ é™¤next,æƒ…å†µ2(b)
 				int next = btree_search_successor(z);
 				root->k[i] = next;
 				btree_delete_nonone(z, next);
 			} else {
-				// Á½¸ö·ÖÖ§½ÚµãÊı¶¼ÎªM-1£¬ÔòºÏ²¢ÖÁy£¬²¢ÔÚyÖĞµİ¹éÉ¾³ıtarget,Çé¿ö2(c)
+				// ä¸¤ä¸ªåˆ†æ”¯èŠ‚ç‚¹æ•°éƒ½ä¸ºM-1ï¼Œåˆ™åˆå¹¶è‡³yï¼Œå¹¶åœ¨yä¸­é€’å½’åˆ é™¤target,æƒ…å†µ2(c)
 				btree_merge_child(root, i, y, z);
 				btree_delete(y, target);
 			}
 		} else {
-			// ÔÚ·ÖÖ§Ã»ÓĞÕÒµ½£¬¿Ï¶¨ÔÚ·ÖÖ§µÄ×Ó½ÚµãÖĞ
+			// åœ¨åˆ†æ”¯æ²¡æœ‰æ‰¾åˆ°ï¼Œè‚¯å®šåœ¨åˆ†æ”¯çš„å­èŠ‚ç‚¹ä¸­
 			y = root->p[i];
 			if(i < root->num) {
 				z = root->p[i+1];
@@ -262,19 +264,19 @@ void BTree::btree_delete_nonone(btree_node *root, int target)
 
 			if(y->num == M - 1) {
 				if(i > 0 && p->num > M - 1) {
-					// ×óÁÚ½Ó½Úµã¹Ø¼ü×Ö¸öÊı´óÓÚM-1
-					//Çé¿ö3(a)
+					// å·¦é‚»æ¥èŠ‚ç‚¹å…³é”®å­—ä¸ªæ•°å¤§äºM-1
+					//æƒ…å†µ3(a)
 					btree_shift_to_right_child(root, i-1, p, y);
 				} else if(i < root->num && z->num > M - 1) {
-					// ÓÒÁÚ½Ó½Úµã¹Ø¼ü×Ö¸öÊı´óÓÚM-1
-					// Çé¿ö3(b)
+					// å³é‚»æ¥èŠ‚ç‚¹å…³é”®å­—ä¸ªæ•°å¤§äºM-1
+					// æƒ…å†µ3(b)
 					btree_shift_to_left_child(root, i, y, z);
 				} else if(i > 0) {
-					// Çé¿ö3£¨c)
+					// æƒ…å†µ3ï¼ˆc)
 					btree_merge_child(root, i-1, p, y); // note
 					y = p;
 				} else {
-					// Çé¿ö3(c)
+					// æƒ…å†µ3(c)
 					btree_merge_child(root, i, y, z);
 				}
 				btree_delete_nonone(y, target);
@@ -286,7 +288,7 @@ void BTree::btree_delete_nonone(btree_node *root, int target)
 	}
 }
 
-//Ñ°ÕÒrightmost£¬ÒÔrootÎª¸ùµÄ×î´ó¹Ø¼ü×Ö
+//å¯»æ‰¾rightmostï¼Œä»¥rootä¸ºæ ¹çš„æœ€å¤§å…³é”®å­—
 int BTree::btree_search_predecessor(btree_node *root)
 {
 	btree_node *y = root;
@@ -296,7 +298,7 @@ int BTree::btree_search_predecessor(btree_node *root)
 	return y->k[y->num-1];
 }
 
-// Ñ°ÕÒleftmost£¬ÒÔrootÎª¸ùµÄ×îĞ¡¹Ø¼ü×Ö
+// å¯»æ‰¾leftmostï¼Œä»¥rootä¸ºæ ¹çš„æœ€å°å…³é”®å­—
 int BTree::btree_search_successor(btree_node *root) 
 {
 	btree_node *z = root;
@@ -306,7 +308,7 @@ int BTree::btree_search_successor(btree_node *root)
 	return z->k[0];
 }
 
-// zÏòy½è½Úµã£¬½«root->k[pos]ÏÂ½µÖÁz£¬½«yµÄ×î´ó¹Ø¼ü×ÖÉÏÉıÖÁrootµÄpos´¦
+// zå‘yå€ŸèŠ‚ç‚¹ï¼Œå°†root->k[pos]ä¸‹é™è‡³zï¼Œå°†yçš„æœ€å¤§å…³é”®å­—ä¸Šå‡è‡³rootçš„poså¤„
 void BTree::btree_shift_to_right_child(btree_node *root, int pos, 
 	btree_node *y, btree_node *z)
 {
@@ -327,7 +329,7 @@ void BTree::btree_shift_to_right_child(btree_node *root, int pos,
 	y->num -= 1;
 }
 
-// yÏò½è½Úµã£¬½«root->k[pos]ÏÂ½µÖÁy£¬½«zµÄ×îĞ¡¹Ø¼ü×ÖÉÏÉıÖÁrootµÄpos´¦
+// yå‘å€ŸèŠ‚ç‚¹ï¼Œå°†root->k[pos]ä¸‹é™è‡³yï¼Œå°†zçš„æœ€å°å…³é”®å­—ä¸Šå‡è‡³rootçš„poså¤„
 void BTree::btree_shift_to_left_child(btree_node *root, int pos,
 	btree_node *y, btree_node *z)
 {
@@ -411,12 +413,12 @@ void BTree::Save(btree_node *root)
 
 BTree::BTree(void)
 {	
-	// ÏÈÅĞ¶ÏÎÄ¼şÊÇ·ñ´æÔÚ
- 	// windowsÏÂ£¬ÊÇio.hÎÄ¼ş£¬linuxÏÂÊÇ unistd.hÎÄ¼ş 
+	// å…ˆåˆ¤æ–­æ–‡ä»¶æ˜¯å¦å­˜åœ¨
+ 	// windowsä¸‹ï¼Œæ˜¯io.hæ–‡ä»¶ï¼Œlinuxä¸‹æ˜¯ unistd.hæ–‡ä»¶ 
   	// int access(const char *pathname, int mode);
    	if(-1==access("define.Bdb",F_OK))
     {
-	   	// ²»´æÔÚ ,´´½¨ 
+	   	// ä¸å­˜åœ¨ ,åˆ›å»º 
 	//   	pfile = fopen("bstree.b","w");
    		roots = btree_create();
 	}

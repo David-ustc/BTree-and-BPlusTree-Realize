@@ -47,7 +47,7 @@ protected:
 	 * @param node: tree root
 	 * @param target: target to insert
 	 */
-	virtual void btree_insert_nonfull(btree_node *node, int target)=0;
+	virtual void btree_insert_nonfull(btree_node *node, int target, string data)=0;
 
 	/**
 	 * @brief merge y, z and root->k[pos] to left
@@ -118,7 +118,7 @@ protected:
 	 *
 	 * @return: new root of tree
 	 */
-	virtual btree_node* btree_insert(btree_node *root, int target)=0;
+	virtual btree_node* btree_insert(btree_node *root, int target, string data)=0;
 
 	/**
 	 * @brief delete a vlue from btree
@@ -152,7 +152,7 @@ protected:
  	*/
   	virtual void Save(btree_node *root)=0;
   	
-  	int btree_node_num;  //¼ÇÂ¼¶àÉÙ¸öÊ÷½áµã£º how many  btree_node
+  	int btree_node_num;  //è®°å½•å¤šå°‘ä¸ªæ ‘ç»“ç‚¹ï¼š how many  btree_node
 public:
 
 	Tree(void)
@@ -168,10 +168,10 @@ public:
 	/*
 	* @param target: target to insert
 	*/
-	void insert(int target)
+	void insert(int target, string data)
 	{
-		roots = btree_insert(roots, target);
-		Save(roots);  // ¼´Ê±±£´æ 
+		roots = btree_insert(roots, target, data);
+		Save(roots);  // å³æ—¶ä¿å­˜ 
 	};
 
 	/**
@@ -189,7 +189,7 @@ public:
 	{
 		roots = btree_delete(roots, target);
 
-		Save(roots);  // ¼´Ê±±£´æ 
+		Save(roots);  // å³æ—¶ä¿å­˜ 
 	};
 	
 	void inorder_print()

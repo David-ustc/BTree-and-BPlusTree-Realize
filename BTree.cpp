@@ -1,7 +1,9 @@
+#pragma once
 #include "BTree.h"
 #include "struct.h"
 #include <stdio.h>
 #include <stdlib.h>
+using namespace std;
 
 #ifdef WIN32
 	#include <io.h>
@@ -21,7 +23,7 @@ btree_node* BTree::btree_node_new()
 	for(int i = 0; i < 2 * M -1; i++) {
 		node->k[i] = 0;
 	}
-
+	node->values = new lnode[2*M-1];
 	for(int i = 0; i < 2 * M; i++) {
 		node->p[i] = NULL;
 	}
@@ -55,6 +57,7 @@ int BTree::btree_split_child(btree_node *parent, int pos, btree_node *child)
 	// 将child后半部分的key拷贝给新节点
 	for(int i = 0; i < M - 1; i++) {
 		new_child->k[i] = child->k[i+M];
+		new_child->values[i] = child->values[i+M];
 	}
 
 	// 如果child不是叶子，还需要把指针拷过去，指针比节点多1
@@ -74,8 +77,10 @@ int BTree::btree_split_child(btree_node *parent, int pos, btree_node *child)
 
 	for(int i = parent->num - 1; i >= pos; i--) {
 		parent->k[i+1] = parent->k[i];
+		parent->values[i+1] = parent->values[i];
 	}
 	parent->k[pos] = child->k[M-1];
+	parent->values[pos] = child->values[M-1];
 
 	parent->num += 1;
 	return 0;
@@ -85,14 +90,24 @@ int BTree::btree_split_child(btree_node *parent, int pos, btree_node *child)
 void BTree::btree_insert_nonfull(btree_node *node, int target, valuetype value)
 {
 	if(1 == node->is_leaf) {
-		// 如果在叶子中找到，直接删除
+		// 如果在叶子中找到，直接插入
 		int pos = node->num;
 		while(pos >= 1 && target < node->k[pos-1]) {
 			node->k[pos] = node->k[pos-1];
+			node->values[pos] = node->values[pos-1];
 			pos--;
 		}
 
 		node->k[pos] = target;
+		//头插入链表
+		if(node->values[pos].next==NULL){
+			node->values[pos].data = value;}
+		else{
+			lnode newvalue;
+			newvalue.data = value;
+			newvalue.next = node->values[pos].next;
+			node->values[pos].next = &newvalue;
+		}
 
 		node->num += 1;
 		btree_node_num+=1;
@@ -149,8 +164,10 @@ void BTree::btree_merge_child(btree_node *root, int pos, btree_node *y, btree_no
 	y->num = 2 * M - 1;
 	for(int i = M; i < 2 * M - 1; i++) {
 		y->k[i] = z->k[i-M];
+		y->values[i] = z->values[i-M];
 	}
 	y->k[M-1] = root->k[pos];// k[pos]下降为y的中间节点
+	y->values[M-1] = root->values[pos];
 
 	// 如果z非叶子，需要拷贝pointer
 	if(false == z->is_leaf) {
@@ -161,7 +178,7 @@ void BTree::btree_merge_child(btree_node *root, int pos, btree_node *y, btree_no
 
 	// k[pos]下降到y中，更新key和pointer
 	for(int j = pos + 1; j < root->num; j++) {
-		root->k[j-1] = root->k[j];
+		root->k[j-1] = root->k[j];root->values[j-1] = root->values[j];
 		root->p[j] = root->p[j+1];
 	}
 
@@ -217,7 +234,7 @@ void BTree::btree_delete_nonone(btree_node *root, int target)
 		while(i < root->num && target > root->k[i]) i++;
 		if(target == root->k[i]) {
 			for(int j = i + 1; j < 2 * M - 1; j++) {
-				root->k[j-1] = root->k[j];
+				root->k[j-1] = root->k[j];root->values[j-1] = root->values[j];
 			}
 			root->num -= 1;
 			
@@ -356,7 +373,15 @@ void BTree::btree_inorder_print(btree_node *root)
 	if(NULL != root) {
 		btree_inorder_print(root->p[0]);
 		for(int i = 0; i < root->num; i++) {
-			printf("%d ", root->k[i]);
+			std::cout<<root->k[i]<<" ";
+			cout<<root->values[i].data<<" ";
+			lnode* temp=root->values[i].next;
+			while(temp!=NULL){
+				temp = temp->next;
+				cout<<temp->data<<" ";
+			}
+			free(temp);
+			cout<<std::endl;
 			btree_inorder_print(root->p[i+1]);
 		}
 	}

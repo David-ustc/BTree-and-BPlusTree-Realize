@@ -284,6 +284,9 @@ int BloomFilter::getIntNum()
 }
 
 using namespace std;
+void function(string pointer[], string &value){
+    pointer[2] = value;
+}
 int main(int argc, char *argv[])
 {
     /*
@@ -296,11 +299,10 @@ int main(int argc, char *argv[])
 
     BloomFilter hashtable(0.01,1000);
     hashtable.filterInit();
-    string keys[5];
-    string* k=keys;
+    string* keys;
+    keys = new string[3];
     keys[0]="world";
-    cout<<k[0]<<endl;
-    keys[1] = "hello";
+    keys[1] = "hello";cout<<keys[0]<<endl;
 	getchar();
     return 0;
 }

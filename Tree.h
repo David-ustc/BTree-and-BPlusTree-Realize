@@ -6,7 +6,6 @@
  * key per node: [M-1, 2M-1]
  * child per node: [M, 2M]
  */
-
 class Tree
 {
 protected:	
@@ -47,7 +46,7 @@ protected:
 	 * @param node: tree root
 	 * @param target: target to insert
 	 */
-	virtual void btree_insert_nonfull(btree_node *node, int target, string data)=0;
+	virtual void btree_insert_nonfull(btree_node *node, int target, valuetype value)=0;
 
 	/**
 	 * @brief merge y, z and root->k[pos] to left
@@ -118,7 +117,7 @@ protected:
 	 *
 	 * @return: new root of tree
 	 */
-	virtual btree_node* btree_insert(btree_node *root, int target, string data)=0;
+	virtual btree_node* btree_insert(btree_node *root, int target, valuetype value)=0;
 
 	/**
 	 * @brief delete a vlue from btree
@@ -168,9 +167,9 @@ public:
 	/*
 	* @param target: target to insert
 	*/
-	void insert(int target, string data)
+	void insert(int target, valuetype value)
 	{
-		roots = btree_insert(roots, target, data);
+		roots = btree_insert(roots, target, value);
 		Save(roots);  // 即时保存 
 	};
 

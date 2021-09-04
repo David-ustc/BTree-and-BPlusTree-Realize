@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <fstream>
+#include <stdio.h>
+#include <iostream>
 #include "BTree.h"
 #include "BPlusTree.h"
 #include "BTree.cpp"
@@ -13,12 +16,18 @@ int main()
 	/******************************** Direct call B + B method *************************************/
 	BTree bt;
 	BPlusTree bpt;
-	
+	valuetype s ="hello";
+	string path = "data/trgm.txt";
+	std::fstream fs;
+    fs.open(path.c_str(),std::ios::in|std::ios::out);
+    fs.seekp(std::ios::beg);
+    
     int arr[] = {18, 31, 12, 10, 15, 48, 45, 47, 50, 52, 23, 30, 20};
     for(int i = 0; i < sizeof(arr) / sizeof(int); i++) {
-        bt.insert(arr[i], "hello");
-		bpt.insert(arr[i], "hello");
-        bpt.level_display();
+		getline(fs, s);
+        bt.insert(arr[i], s);
+		bpt.insert(arr[i], s);
+		bt.inorder_print();
     }
     printf("no delete data:\n");
  	printf("display about B+ Tree:\n");
